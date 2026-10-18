@@ -1,0 +1,67 @@
+name: Archive DYOR full transaction history
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/archive-dyor-history.yml'
+permissions:
+  contents: write
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - name: Paginate DYOR history for EFHC and RBTC
+        id: extract
+        continue-on-error: true
+        env:
+          DYOR_MAX_PAGES: '2500'
+          DYOR_SECONDS: '3000'
+        run: python3 tools/dyor/archive_transactions.py
+      - name: Validate manifest and commit archive to repository
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,json,gzip,hashlib
+          manifests=list(pathlib.Path('archive/dyor').glob('*/manifest.json'))
+          assert manifests,'Missing manifest'
+          for path in manifests:
+              m=json.loads(path.read_text())
+              for name, info in m['tokens'].items():
+                  f=path.parent/info['file']
+                  assert f.exists() and hashlib.sha256(f.read_bytes()).hexdigest()==info['sha256']
+                  with gzip.open(f,'rt') as stream:
+                      assert sum(1 for _ in stream)==info['unique_records']
+                  print(name,info['unique_records'],info['reached_end_of_feed'],info['error'])
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add archive/dyor/
+          if ! git diff --cached --quiet; then
+            git commit -m "Archive DYOR EFHC and RBTC transaction history with completeness manifest"
+            git push origin HEAD:main
+          fi
+      - name: Upload evidence artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dyor-history
+          path: archive/dyor/
+          retention-days: 90
+      - name: Enforce completeness
+        if: always()
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import pathlib,json,sys
+          paths=list(pathlib.Path('archive/dyor').glob('*/manifest.json'))
+          if not paths:sys.exit('Missing history manifest')
+          m=json.loads(paths[-1].read_text())
+          for k in ('EFHC','RBTC'):
+              x=m['tokens'].get(k)
+              if not x or not x['reached_end_of_feed']:
+                  sys.exit(f"INCOMPLETE {k}: {x}")
+          print('Both DYOR token feeds exhausted')
+          PY
