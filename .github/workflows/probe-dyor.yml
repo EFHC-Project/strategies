@@ -1,0 +1,50 @@
+name: Probe DYOR transaction API
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/probe-dyor.yml'
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Probe EFHC and RBTC transaction endpoints
+        shell: bash
+        run: |
+          mkdir -p artifacts/dyor-probe
+          python3 - <<'PY'
+          import json, urllib.request, urllib.error, datetime, pathlib, os
+          out=pathlib.Path("artifacts/dyor-probe")
+          tokens={"EFHC":"EQDNcpWf9mXgSPDubDCzvuaX-juL4p8MuUwrQC-36sARRBuw","RBTC":"EQCD7lrrxpOcq5A5R6nTLeF1kuIbl1BKCe5OnanGe3cB4FVB"}
+          results=[]
+          for name,address in tokens.items():
+              url=f"https://api.dyor.io/v1/jettons/{address}/transactions?limit=5&exchangeId=stonfi"
+              req=urllib.request.Request(url,headers={"Accept":"application/json","User-Agent":"EFHC-Strategies-Research/1.0"})
+              try:
+                  with urllib.request.urlopen(req,timeout=25) as response:
+                      body=response.read(200000)
+                      status=response.status
+                      try:
+                          payload=json.loads(body)
+                          (out/f"{name}_sample.json").write_text(json.dumps(payload,ensure_ascii=False,indent=2))
+                          count=len(payload.get("transactions",[])) if isinstance(payload,dict) else None
+                          next_cursor=bool(payload.get("next")) if isinstance(payload,dict) else None
+                          results.append({"token":name,"http_status":status,"sample_count":count,"has_next":next_cursor})
+                      except ValueError:
+                          results.append({"token":name,"http_status":status,"error":"non-JSON response","preview":body[:300].decode(errors="replace")})
+              except urllib.error.HTTPError as e:
+                  results.append({"token":name,"http_status":e.code,"error":e.read(1000).decode(errors="replace")})
+              except Exception as e:
+                  results.append({"token":name,"error":str(e)})
+          (out/"probe_status.json").write_text(json.dumps({"timestamp_utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"results":results},indent=2))
+          print(json.dumps(results,indent=2))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dyor-probe
+          path: artifacts/dyor-probe/
