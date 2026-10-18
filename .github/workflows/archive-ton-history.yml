@@ -1,0 +1,47 @@
+name: Archive verified TON extraction in repository
+on:
+  push:
+    paths:
+      - '.github/workflows/archive-ton-history.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+  actions: read
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download original history artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          mkdir -p archive/ton-history/2026-10-18-run-39142840992
+          gh run download 39142840992 --repo "${{ github.repository }}" --name efhc-ton-history --dir archive/ton-history/2026-10-18-run-39142840992
+      - name: Create immutable ZIP and provenance
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,zipfile,pathlib
+          root=pathlib.Path("archive/ton-history/2026-10-18-run-39142840992")
+          files=sorted(p for p in root.iterdir() if p.is_file() and p.suffix==".jsonl" or p.name=="status.json")
+          assert len(files)==4, f"Expected 4 history files, found {len(files)}"
+          status=json.loads((root/"status.json").read_text())
+          assert sum(int(s["count"]) for s in status)==96, "Unexpected transaction count"
+          zip_path=root/"efhc-ton-history-2026-10-18.zip"
+          with zipfile.ZipFile(zip_path,"w",compression=zipfile.ZIP_DEFLATED,compresslevel=9) as z:
+              for p in files:z.write(p,p.name)
+          report={"source_run":39142840992,"source_artifact":12142121869,"transactions":{s["pool"]:s["count"] for s in status},"complete":{s["pool"]:s["complete"] for s in status},"archive_sha256":hashlib.sha256(zip_path.read_bytes()).hexdigest(),"note":"Partial history for USDT and GRAM; raw transaction text only, not decoded swaps"}
+          (root/"PROVENANCE.json").write_text(json.dumps(report,indent=2)+"\n")
+          print(report)
+          PY
+      - name: Commit archived evidence
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add archive/ton-history/2026-10-18-run-39142840992
+          git commit -m "Archive 96 TON pool transaction records from Actions run 39142840992"
+          git push origin HEAD:main
