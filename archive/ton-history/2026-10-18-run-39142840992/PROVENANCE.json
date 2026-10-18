@@ -1,0 +1,16 @@
+{
+  "source_run": 39142840992,
+  "source_artifact": 12142121869,
+  "transactions": {
+    "USDT_EFHC": 13,
+    "GRAM_EFHC": 39,
+    "RBTC_EFHC": 44
+  },
+  "complete": {
+    "USDT_EFHC": false,
+    "GRAM_EFHC": false,
+    "RBTC_EFHC": true
+  },
+  "archive_sha256": "f2585306794a847ad82c2429ea1d18181cf093e78473119e718b0bcf2f115801",
+  "note": "Partial history for USDT and GRAM; raw transaction text only, not decoded swaps"
+}
