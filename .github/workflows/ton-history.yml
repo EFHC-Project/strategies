@@ -1,6 +1,10 @@
 name: EFHC TON historical transactions
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'tools/ton-history/**'
+      - '.github/workflows/ton-history.yml'
 permissions:
   contents: read
 jobs:
