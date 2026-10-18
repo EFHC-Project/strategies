@@ -23,7 +23,7 @@ POOLS = {
     "RBTC_EFHC": "EQAlrp2dgYMHbtp1X0_KujyZvpTHkjjEvic4kBa1FlNRZa8s",
 }
 MAX_PAGES = int(os.environ.get("DYOR_MAX_PAGES", "2500"))
-RBTC_LIMIT = min(20000, max(1, int(os.environ.get("DYOR_RBTC_LIMIT", "1000"))))
+RECORD_LIMIT = min(20000, max(1, int(os.environ.get("DYOR_RECORD_LIMIT", "20000"))))
 DEADLINE = time.monotonic() + int(os.environ.get("DYOR_SECONDS", "3000"))
 ROOT = Path("archive/dyor") / dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
 ROOT.mkdir(parents=True, exist_ok=True)
@@ -68,7 +68,7 @@ def main():
         pool_counts = {}
         min_time = None
         max_time = None
-        record_limit = RBTC_LIMIT if symbol == "RBTC" else None
+        record_limit = RECORD_LIMIT
         limit_reached = False
         # One compact compressed file per token, preserving raw transaction fields.
         with gzip.open(path, "wt", encoding="utf-8", compresslevel=6) as out:
@@ -135,7 +135,7 @@ def main():
     summary["completed_utc"] = dt.datetime.now(dt.timezone.utc).isoformat()
     (ROOT / "manifest.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
     if not all(summary["tokens"].get(s, {}).get("reached_end_of_feed") or
-               (s == "RBTC" and summary["tokens"].get(s, {}).get("limit_reached")) for s in TOKENS):
+               summary["tokens"].get(s, {}).get("limit_reached") for s in TOKENS):
         print("INCOMPLETE: inspect manifest.json", file=sys.stderr)
         return 2
     return 0
