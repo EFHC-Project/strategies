@@ -1,0 +1,30 @@
+name: Analyze DYOR transaction archive
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/analyze-dyor.yml'
+permissions:
+  contents: write
+jobs:
+  analyze:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate and profile archived transactions
+        run: python3 tools/dyor/analyze_transactions.py
+      - name: Commit reproducible reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/dyor/
+          if ! git diff --cached --quiet; then
+            git commit -m "Record DYOR transaction investigation baseline"
+            git push origin HEAD:main
+          fi
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dyor-analysis
+          path: reports/dyor/
