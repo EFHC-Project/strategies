@@ -1,0 +1,69 @@
+{
+  "schema": "dyor-cursor-archive-v1",
+  "created_utc": "2026-10-18T16:40:37.650710+00:00",
+  "source": "https://api.dyor.io/v1/jettons/{address}/transactions",
+  "parameters": {
+    "limit": 100,
+    "exchangeId": "stonfi"
+  },
+  "tokens": {
+    "EFHC": {
+      "address": "EQDNcpWf9mXgSPDubDCzvuaX-juL4p8MuUwrQC-36sARRBuw",
+      "pages": 2,
+      "unique_records": 135,
+      "duplicates_skipped": 0,
+      "reached_end_of_feed": true,
+      "limit_reached": false,
+      "requested_record_limit": 20000,
+      "error": null,
+      "last_cursor": null,
+      "first_time_utc": "2025-05-06T22:57:48Z",
+      "last_time_utc": "2026-10-18T13:50:24Z",
+      "pool_counts_raw": {
+        "0:25ae9d9d8183076eda755f4fcaba3c99be94c79238c4be27389016b516535165": 9,
+        "0:cc0aa4734a732d2a396dafa8dfe05a9a875a35e06772abab14e7e5ec34692e21": 95,
+        "0:768b3e3ea06e74c6e5e36d161cfa1f9347e4a2a30ef29c7d1718db28aff96083": 31
+      },
+      "file": "EFHC.jsonl.gz",
+      "sha256": "50d248fbca6bc1315116395d1c24a4d51447d499ecedc4431640ccde74282a4f"
+    },
+    "RBTC": {
+      "address": "EQCD7lrrxpOcq5A5R6nTLeF1kuIbl1BKCe5OnanGe3cB4FVB",
+      "pages": 201,
+      "unique_records": 20000,
+      "duplicates_skipped": 0,
+      "reached_end_of_feed": false,
+      "limit_reached": true,
+      "requested_record_limit": 20000,
+      "error": null,
+      "last_cursor": "eyJoYXNoIjoibzNoa3hZQ1h6NjR3WCtKUUUvTVJIR2hiNUtPd2lNaytoVXBsVi8vTGJjMD0iLCJ0aW1lIjoiMjAyNC0xMS0yOVQwOToxNjo0OVoiLCJ0aW1lTHQiOjUxMzY1Mjg3MDAwMDA1LCJvcmRlciI6IiJ9Cg==",
+      "first_time_utc": "2024-11-29T09:16:49Z",
+      "last_time_utc": "2026-10-18T16:18:03Z",
+      "pool_counts_raw": {
+        "0:ca196d01b83ec8b618c0ae6aac16b502b14dc3986ab5e236ede517b5210245fe": 11034,
+        "0:25ae9d9d8183076eda755f4fcaba3c99be94c79238c4be27389016b516535165": 9,
+        "0:b3ad9f4580cb0752b269c187513271ebe8a20014a4e05e2a50a6ce0993eed235": 1,
+        "0:960a3b3ec3a3e69ba9f28a34d70be800f03c6b2d34e83bfe1d79fc6361f6a08d": 124,
+        "0:35c76edaff6e36a397ee54d85ac21605567fd288c3b0d66a208499a22a256a6c": 64,
+        "0:d6aa676dac467019bedaa57aee6502806acf9163aa1bf14c2bc0872dfc396235": 115,
+        "0:5b2beea3529216a286e8f138bc11314e5d7b49499f28123065c2209097128c26": 18,
+        "0:b823a739f3077b4a5e8953a29c677eec66b4c09136ad6cb40c834c2d4c88a48c": 45,
+        "0:b3aff77a0ffe92683b0b8023f838dfda67831cddfa813c89d38052963004516c": 24,
+        "0:56f9f46399478128e6ab51496c18ab81201bd18bcb7904bbd86cc5ed99c268f2": 12,
+        "0:43d47c36684b9e5fb81f79d826eadd744d02371e49a418dd29990ed63d3b4f4a": 45,
+        "0:a1be1ff7741be336762e10d42c4b34d25026018a400188aba9e18aa20d2b6acf": 8501,
+        "0:af1d1386a013b67fb086b6af674ca7f2af2ac3882b7021ab05f540b3064ebff5": 1,
+        "0:a28fb7c726c7e33c315e471e3493dac763e16949231bd792c49c2b55333e60ee": 7
+      },
+      "file": "RBTC.jsonl.gz",
+      "sha256": "a1fb7a3544ec4d9a7af09d3c584604f184c28bdf263ff78893b58c44740c7b2f"
+    }
+  },
+  "pool_addresses": {
+    "USDT_EFHC": "EQB2iz4-oG50xuXjbRYc-h-TR-Siow7ynH0XGNsor_lgg8D2",
+    "GRAM_EFHC": "EQDMCqRzSnMtKjltr6jf4Fqah1o14Gdyq6sU5-XsNGkuIY9F",
+    "RBTC_EFHC": "EQAlrp2dgYMHbtp1X0_KujyZvpTHkjjEvic4kBa1FlNRZa8s"
+  },
+  "caveat": "DYOR transaction feed, not independent TON BOC verification. A token feed may include other pools.",
+  "completed_utc": "2026-10-18T16:45:39.312747+00:00"
+}
