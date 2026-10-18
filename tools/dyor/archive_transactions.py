@@ -23,6 +23,7 @@ POOLS = {
     "RBTC_EFHC": "EQAlrp2dgYMHbtp1X0_KujyZvpTHkjjEvic4kBa1FlNRZa8s",
 }
 MAX_PAGES = int(os.environ.get("DYOR_MAX_PAGES", "2500"))
+RBTC_LIMIT = min(20000, max(1, int(os.environ.get("DYOR_RBTC_LIMIT", "1000"))))
 DEADLINE = time.monotonic() + int(os.environ.get("DYOR_SECONDS", "3000"))
 ROOT = Path("archive/dyor") / dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
 ROOT.mkdir(parents=True, exist_ok=True)
@@ -67,6 +68,8 @@ def main():
         pool_counts = {}
         min_time = None
         max_time = None
+        record_limit = RBTC_LIMIT if symbol == "RBTC" else None
+        limit_reached = False
         # One compact compressed file per token, preserving raw transaction fields.
         with gzip.open(path, "wt", encoding="utf-8", compresslevel=6) as out:
             while pages < MAX_PAGES and time.monotonic() < DEADLINE:
@@ -81,6 +84,9 @@ def main():
                     error = "Repeated/invalid cursor"
                     break
                 for item in batch:
+                    if record_limit is not None and records >= record_limit:
+                        limit_reached = True
+                        break
                     if not isinstance(item, dict):
                         error = "Non-object transaction"
                         break
@@ -100,6 +106,8 @@ def main():
                 if error:
                     break
                 pages += 1
+                if limit_reached:
+                    break
                 if pages % 20 == 0:
                     print(f"{symbol}: pages={pages}, unique={records}, duplicates={duplicates}", flush=True)
                     out.flush()
@@ -112,11 +120,12 @@ def main():
                     error = "Empty page with next cursor"
                     break
                 time.sleep(0.12)
-            if not complete and not error:
+            if not complete and not error and not limit_reached:
                 error = "Pagination limit or time budget reached"
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         summary["tokens"][symbol] = {"address": address, "pages": pages, "unique_records": records,
-            "duplicates_skipped": duplicates, "reached_end_of_feed": complete, "error": error,
+            "duplicates_skipped": duplicates, "reached_end_of_feed": complete, "limit_reached": limit_reached,
+            "requested_record_limit": record_limit, "error": error,
             "last_cursor": cursor if not complete else None, "first_time_utc": min_time,
             "last_time_utc": max_time, "pool_counts_raw": pool_counts,
             "file": path.name, "sha256": digest}
@@ -125,7 +134,8 @@ def main():
             break
     summary["completed_utc"] = dt.datetime.now(dt.timezone.utc).isoformat()
     (ROOT / "manifest.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n")
-    if not all(summary["tokens"].get(s, {}).get("reached_end_of_feed") for s in TOKENS):
+    if not all(summary["tokens"].get(s, {}).get("reached_end_of_feed") or
+               (s == "RBTC" and summary["tokens"].get(s, {}).get("limit_reached")) for s in TOKENS):
         print("INCOMPLETE: inspect manifest.json", file=sys.stderr)
         return 2
     return 0
