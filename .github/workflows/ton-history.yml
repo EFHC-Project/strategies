@@ -1,0 +1,27 @@
+name: EFHC TON historical transactions
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.0'
+          cache: false
+      - name: Resolve module dependencies
+        run: cd tools/ton-history && go mod tidy
+      - name: Fetch all available history
+        run: cd tools/ton-history && go run . -out ../../artifacts/efhc-ton
+      - name: Preserve history and completeness report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: efhc-ton-history
+          path: artifacts/efhc-ton/
+          if-no-files-found: warn
+          retention-days: 30
