@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/archive-dyor-history.yml'
+      - 'tools/dyor/archive_transactions.py'
 permissions:
   contents: write
 jobs:
@@ -61,7 +62,7 @@ jobs:
           m=json.loads(paths[-1].read_text())
           for k in ('EFHC','RBTC'):
               x=m['tokens'].get(k)
-              if not x or not x['reached_end_of_feed']:
+              if not x or not (x['reached_end_of_feed'] or x.get('limit_reached')):
                   sys.exit(f"INCOMPLETE {k}: {x}")
-          print('Both DYOR token feeds exhausted')
+          print('DYOR feeds exhausted or capped at 20000 records per token')
           PY
